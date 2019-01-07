@@ -1,0 +1,181 @@
+<div class="row">
+     <div class="">
+         <div class="card ">
+             <div class="header">
+                 <h4 class="title">Setup</h4>
+                 <p class="category">CVS Compare development</p>
+             </div>
+             <div class="content">
+             
+             	<form id="file_form" name="file_form" action="Controller?actionType=upload" method="post" enctype="multipart/form-data">             	
+	             	<input type="hidden"  id="json" name="json"/> 
+	             	
+	             	<table width="50%">
+	             	
+	             	<tr>
+	             	<td>Upload 1st CSV</td>
+	             	<td>:</td>
+	             	<td><input type="file" name="fileName1" id="fileName1"/></td>
+	             	</tr>
+	             	
+	             	<tr>
+	             	<td>Upload 2st CSV</td>
+	             	<td>:</td>
+	             	<td><input type="file" name="fileName2" id="fileName2"/></td>
+	             	</tr>
+	             	
+	             	<tr>
+	             	<td>&nbsp;</td>
+	             	<td>&nbsp;</td>
+	             	<td>&nbsp;</td>
+	             	</tr>
+	             	
+	             	<tr>
+	             	<td><input type="button" name="csv2" id="compile" value="COMPILE"/></td>
+	             	<td><input type="button" name="csv2" id="cancel" onclick="loadPage('table')" value="CANCEL"/></td>
+	             	<td><input type="button" name="csv2" id="reset" onclick="loadPage('table')" value="RESET"/></td>
+	             	</tr>
+	             	
+	             	</table>  
+             	</form>             
+                 
+             </div>
+         </div>
+     </div>
+ </div>
+ 
+ <div class="row" id="row_01" style="display: none;">
+     <div class="">
+         <div class="card ">
+             <div class="header">
+                 <h4 class="title">Result 01</h4>
+                 <p class="category">CSV output for 1st file vs 2nd file <a id="table_01">Download CSV</a></p>
+             </div>
+             <div class="content" id="table_data_01" style="overflow:auto">            
+             	         
+                 
+             </div>
+         </div>
+     </div>
+ </div>
+ 
+ <div class="row" id="row_02" style="display: none;">
+     <div class="">
+         <div class="card ">
+             <div class="header">
+                 <h4 class="title">Result 02</h4>
+                 <p class="category">CSV output for 2nd file vs 1st file <a id="table_02">Download CSV</a></p>
+             </div>
+             <div class="content" id="table_data_02" style="overflow:auto">            
+             	         
+                 
+             </div>
+         </div>
+     </div>
+ </div>
+ 
+ 
+ <script type="text/javascript">
+ 
+ $(document).ready(function() {    	  
+		
+	 $( "#compile" ).click(function() {
+		comareData();
+		
+		$("#row_02").hide();
+		$("#row_02").hide();		
+	});
+	 
+	$("#table_01").click(function(){
+		  $("#CSV01_CSV02").tableToCSV();
+	});
+	
+	$("#table_02").click(function(){
+		  $("#CSV01_CSV02").tableToCSV();
+	});
+
+		
+});
+ function createHeading(response,type){
+	 var htmlData ="";
+	
+	 
+	 htmlData+="<table id=\""+type+"\" class=\"table table-bordered\" cellSpacing=0 cellPadding=1 width=\"100%\" border=1>\n";
+	 htmlData+="	<thead><tr class=\"tableheadbg tablegridcell\" align=\"center\">\n";
+	 
+	 var headingStr_array = response[0].HEADING.split("@@@@");
+	 $.each(headingStr_array,function(i){
+		 htmlData+="		<th align=\"center\"><b>"+headingStr_array[i]+"</b></th>\n" ;		 
+	 });
+	
+	 htmlData+="	</tr></thead>\n";
+ 	return htmlData;
+ }
+ function createTableData(response,type){
+	 var html ="";	 
+	 html +="<tbody>";   
+	 
+	 if(type === 'CSV01_CSV02'){
+		 $.each(response[0].CSV01_CSV02,function(i){ 
+			 html +="<tr>";			
+			 var row_data_array = response[0].CSV01_CSV02[i].ROW_DATA.split("@@@@");
+			 $.each(row_data_array,function(j){
+				 html +="<td>"+row_data_array[j]+"</td>";		 
+			 });			 
+			 html +="</tr>";			 
+		 });
+	 }else if(type === 'CSV02_CSV01'){
+		 $.each(response[0].CSV02_CSV01,function(i){ 
+			 html +="<tr>";			
+			 var row_data_array = response[0].CSV02_CSV01[i].ROW_DATA.split("@@@@");
+			 $.each(row_data_array,function(j){
+				 html +="<td>"+row_data_array[j]+"</td>";		 
+			 });			 
+			 html +="</tr>";			 
+		 });
+	 }
+	 
+  	
+  	html +="</tbody>";
+  	html +="</table>";	 
+	return html;
+ }
+ 
+ 
+ function comareData(){
+	 var fd = new FormData();
+     var fileName1 = $('#fileName1')[0].files[0];
+     fd.append('file',fileName1);
+     
+     var fileName2 = $('#fileName2')[0].files[0];
+     fd.append('file',fileName2);
+
+     $.ajax({
+         url: 'Controller?actionType=upload',
+         type: 'post',
+         data: fd,
+         contentType: false,
+         processData: false,
+         async: false,
+         dataType: 'json', //  Expect a return value of json
+         success: function(response){ 
+        	 
+        	 var dataArray = eval(response);            	
+          	
+         	 var html = createHeading(dataArray,'CSV01_CSV02');
+        	 html += createTableData(dataArray,'CSV01_CSV02');
+        	 $("#table_data_01").html(html);
+        	 $("#row_01").show();
+        	 $('#CSV01_CSV02').DataTable();
+        	 
+        	 html = createHeading(dataArray,'CSV02_CSV01');
+        	 html += createTableData(dataArray,'CSV02_CSV01');        	 
+        	 $("#table_data_02").html(html);
+        	 $("#row_02").show();
+        	 $('#CSV02_CSV01').DataTable();
+         },         
+     });    
+ } 
+ 
+
+</script>

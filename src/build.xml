@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="CSVCompare" default="full_build" basedir="../">	
+	<property file="src/ApplicationResource.properties" />
+	
+	<!-- beanshell script to convert the project name to lowercase-->
+	<scriptdef name="pathseperator" language="beanshell">
+		<attribute name="property" />
+	    pathseperatorString = java.io.File.separator;
+	    project.setNewProperty(attributes.get("property"), pathseperatorString);
+	</scriptdef>
+		
+	<!-- Call the lowercase beanshell script that converts the eclipse project name to lowercase and store it as the portal name in portal.name-->
+	<pathseperator property="path.sep"/>
+	
+	<xmlproperty file=".project"/>
+	
+	<property name="portal.name" value="CSVCompare" />
+	<property name="warFileName" value="CSVCompare" />
+	<property name="eclipse.project.name" value="CSVCompare" />
+	<property name="src" location="src" />
+	<property name="web" location="WebContent" />
+	
+	<property name="deployment.dir" location="${war.deployment.dir}" />	
+	<property name="war-name" value="${warFileName}" />
+	<property name="build.dir" value="${build.home}" />
+		
+	<!-- property name="build.dir" value="${rezg.ant.local.project.workspace.path}${path.sep}RezgBuild${path.sep}${warFileName}${path.sep}Dev"/ -->
+	<property name="build.dir" value="${build.dir}/Dev"/>
+	
+	
+	<target name="init">
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build.dir}" />		
+	</target>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${deployment.dir}/${war-name}" />		
+	</target>
+	
+	<target name="compile" depends="init">
+		<path id="compile.classpath">
+			<fileset dir="${lib.home}">
+				<include name="**/*.jar" />
+				<include name="**/*.zip" />
+			</fileset>
+			<fileset dir="${lib.home}">
+				<include name="**/*.jar" />
+				<include name="**/*.zip" />
+			</fileset>
+		</path>
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="${src}" destdir="${build.dir}"  debug="true" nowarn="true" memoryinitialsize="256m" memorymaximumsize="512m" fork="true" includeantruntime="false">
+			<classpath refid="compile.classpath" />
+		</javac>
+	</target> 		
+	
+	<target name="copy_web_files" description="Copy web files">		
+		<copy todir="${deployment.dir}/${war-name}/assets" failonerror="false" overwrite="${overwrite_status}">
+			<fileset dir="${web}/assets"/>
+		</copy>
+		
+		<copy todir="${deployment.dir}/${war-name}/html" failonerror="false" overwrite="${overwrite_status}">
+			<fileset dir="${web}/html"/>
+		</copy>
+		
+		
+		<copy todir="${deployment.dir}/${war-name}/css" failonerror="false" overwrite="${overwrite_status}">
+			<fileset dir="${web}/css"/>
+		</copy>
+		<copy todir="${deployment.dir}/${war-name}/jsp" failonerror="false" overwrite="${overwrite_status}">
+			<fileset dir="${web}/jsp"/>
+		</copy>
+		<copy todir="${deployment.dir}/${war-name}/images" failonerror="false" overwrite="${overwrite_status}">
+			<fileset dir="${web}/images"/>
+		</copy>		
+		<copy todir="${deployment.dir}/${war-name}/js" failonerror="false" overwrite="${overwrite_status}">
+			<fileset dir="${web}/js"/>
+		</copy>	
+		<copy todir="${deployment.dir}/${war-name}/META-INF" failonerror="false" overwrite="${overwrite_status}">
+			<fileset file="${web}/META-INF/persistence.xml"/>
+		</copy>
+	</target>
+	
+	<target name="copy_conf_files">
+		<echo>Creating CopiedFiles....</echo>
+		<echo>Copying web.xml, struts-config.xml</echo>
+		<copy todir="${deployment.dir}/${war-name}/WEB-INF">
+			<fileset dir="${web}/WEB-INF">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		<copy todir="${deployment.dir}/${war-name}/META-INF">
+			<fileset dir="${web}/META-INF">
+				<include name="MANIFEST.MF" />
+			</fileset>
+		</copy>	
+		
+		<copy todir="${deployment.dir}/${war-name}/WEB-INF/lib">
+			<fileset dir="${web}/WEB-INF/lib/">
+				<include name="*jar" />
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="copy_files" depends="copy_web_files,copy_conf_files">
+		<echo>Copying class files</echo>
+		<copy todir="${deployment.dir}/${war-name}/WEB-INF/classes">
+			<fileset dir="${build.dir}/" />
+		</copy>
+	</target>
+	
+	<target name="full_build" depends="clean,compile" description="CSVCompare">
+		<mkdir dir="${deployment.dir}/${war-name}" />
+		<antcall target="copy_files" />
+	</target>	
+</project>
